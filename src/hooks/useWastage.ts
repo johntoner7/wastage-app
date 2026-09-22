@@ -1,63 +1,93 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  deleteAllEntriesForDate,
+  deleteEntry,
+  fetchEntriesForDate,
+  isSupabaseConfigured,
+  upsertEntry,
+} from "../lib/supabase";
 import type { WastageEntries } from "../types";
 
-const ENTRIES_KEY = "subventory:wastage:entries";
-const DATE_KEY = "subventory:wastage:date";
-
-function todayKey(): string {
+export function todayISO(): string {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate(),
-  ).padStart(2, "0")}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function loadEntries(): WastageEntries {
-  try {
-    const storedDate = localStorage.getItem(DATE_KEY);
-    if (storedDate !== todayKey()) {
-      // New day — start a fresh sheet rather than carry over yesterday's counts.
-      return {};
-    }
-    const raw = localStorage.getItem(ENTRIES_KEY);
-    return raw ? (JSON.parse(raw) as WastageEntries) : {};
-  } catch {
-    return {};
-  }
-}
+type Status = "loading" | "ready" | "error";
 
 /**
- * Tracks today's wastage entries in state and mirrors them to localStorage,
- * so a refresh or an accidental tab close during a shift doesn't lose counts.
- * The sheet automatically clears itself at the start of a new day.
+ * Loads and syncs today's wastage entries against Supabase, so the same
+ * sheet is visible from any device. Writes are applied to local state
+ * immediately (so the UI feels instant) and pushed to Supabase in the
+ * background; if a write fails, we surface an error and re-fetch from
+ * the server so local state can't silently drift from what's saved.
  */
 export function useWastage() {
-  const [entries, setEntries] = useState<WastageEntries>(() => loadEntries());
+  const date = todayISO();
+  const [entries, setEntries] = useState<WastageEntries>({});
+  const [status, setStatus] = useState<Status>(isSupabaseConfigured ? "loading" : "error");
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setStatus("error");
+      setError("Supabase isn't configured yet — see README.md to connect a project.");
+      return;
+    }
+    setStatus("loading");
+    try {
+      const fetched = await fetchEntriesForDate(date);
+      setEntries(fetched);
+      setStatus("ready");
+      setError(null);
+    } catch (e) {
+      setStatus("error");
+      setError(e instanceof Error ? e.message : "Couldn't load today's sheet.");
+    }
+  }, [date]);
 
   useEffect(() => {
+    load();
+  }, [load]);
+
+  const setQuantity = useCallback(
+    (productId: string, quantity: number | null) => {
+      setEntries((prev) => {
+        const next = { ...prev };
+        if (quantity === null || Number.isNaN(quantity) || quantity <= 0) delete next[productId];
+        else next[productId] = quantity;
+        return next;
+      });
+
+      (async () => {
+        try {
+          if (quantity === null || Number.isNaN(quantity) || quantity <= 0) {
+            await deleteEntry(date, productId);
+          } else {
+            await upsertEntry(date, productId, quantity);
+          }
+          setError(null);
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Couldn't save that change — check your connection.");
+          load();
+        }
+      })();
+    },
+    [date, load],
+  );
+
+  const clearAll = useCallback(async () => {
+    setEntries({});
     try {
-      localStorage.setItem(DATE_KEY, todayKey());
-      localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
-    } catch {
-      // Storage can be unavailable (private browsing, quota) — the app still
-      // works for the session, it just won't survive a refresh.
+      await deleteAllEntriesForDate(date);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't clear the sheet — check your connection.");
+      load();
     }
-  }, [entries]);
+  }, [date, load]);
 
-  const setQuantity = useCallback((productId: string, quantity: number | null) => {
-    setEntries((prev) => {
-      const next = { ...prev };
-      if (quantity === null || Number.isNaN(quantity) || quantity <= 0) {
-        delete next[productId];
-      } else {
-        next[productId] = quantity;
-      }
-      return next;
-    });
-  }, []);
+  const recordedCount = Object.keys(entries).length;
 
-  const clearAll = useCallback(() => setEntries({}), []);
-
-  const recordedCount = useMemo(() => Object.keys(entries).length, [entries]);
-
-  return { entries, setQuantity, clearAll, recordedCount };
+  return { entries, setQuantity, clearAll, recordedCount, status, error, reload: load, date };
 }

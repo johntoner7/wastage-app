@@ -3,6 +3,7 @@ import "./Header.css";
 interface HeaderProps {
   query: string;
   onQueryChange: (q: string) => void;
+  onOpenHistory: () => void;
 }
 
 const dateLabel = new Date().toLocaleDateString(undefined, {
@@ -11,7 +12,7 @@ const dateLabel = new Date().toLocaleDateString(undefined, {
   month: "long",
 });
 
-export function Header({ query, onQueryChange }: HeaderProps) {
+export function Header({ query, onQueryChange, onOpenHistory }: HeaderProps) {
   return (
     <header className="header">
       <div className="header__top">
@@ -22,6 +23,9 @@ export function Header({ query, onQueryChange }: HeaderProps) {
             <p className="header__subtitle">Line check · {dateLabel}</p>
           </div>
         </div>
+        <button type="button" className="header__history" onClick={onOpenHistory}>
+          History
+        </button>
       </div>
       <div className="header__search">
         <svg

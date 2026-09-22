@@ -1,7 +1,7 @@
 export type Unit = "kg" | "ea";
 
 export interface Product {
-  /** Stable identifier, also used as the localStorage key fragment. */
+  /** Stable identifier, also used as the Supabase row key. */
   id: string;
   name: string;
   category: string;

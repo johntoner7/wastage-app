@@ -1,0 +1,26 @@
+.errorbanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 16px 0;
+  padding: 9px 12px;
+  background: var(--danger-wash);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.errorbanner__text {
+  flex: 1;
+}
+
+.errorbanner__retry {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--danger);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+}

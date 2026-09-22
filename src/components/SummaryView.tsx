@@ -7,8 +7,12 @@ interface SummaryViewProps {
   products: Product[];
   entries: WastageEntries;
   onClose: () => void;
-  onClearAll: () => void;
-  onChange: (productId: string, value: number | null) => void;
+  /** Heading date text. Defaults to today's date, written out in full. */
+  dateLabel?: string;
+  /** Read-only mode for viewing a past day — hides remove/clear-all controls. */
+  readOnly?: boolean;
+  onClearAll?: () => void;
+  onChange?: (productId: string, value: number | null) => void;
 }
 
 function formatQty(value: number, unit: string): string {
@@ -20,9 +24,21 @@ function trimTrailingZeros(s: string): string {
   return s.replace(/\.?0+$/, (m) => (m.startsWith(".") ? "" : m)).replace(/\.$/, "");
 }
 
-export function SummaryView({ products, entries, onClose, onClearAll, onChange }: SummaryViewProps) {
+const defaultDateLabel = () =>
+  new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
+export function SummaryView({
+  products,
+  entries,
+  onClose,
+  dateLabel,
+  readOnly = false,
+  onClearAll,
+  onChange,
+}: SummaryViewProps) {
   const [copied, setCopied] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const resolvedDateLabel = dateLabel ?? defaultDateLabel();
 
   const byCategory = useMemo(() => {
     const grouped = new Map<string, Product[]>();
@@ -41,12 +57,7 @@ export function SummaryView({ products, entries, onClose, onClearAll, onChange }
   const totalItems = byCategory.reduce((sum, g) => sum + g.items.length, 0);
 
   const sheetText = useMemo(() => {
-    const dateLabel = new Date().toLocaleDateString(undefined, {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
-    const lines = [`Wastage — ${dateLabel}`, ""];
+    const lines = [`Wastage — ${resolvedDateLabel}`, ""];
     for (const group of byCategory) {
       lines.push(group.category.toUpperCase());
       for (const product of group.items) {
@@ -55,7 +66,7 @@ export function SummaryView({ products, entries, onClose, onClearAll, onChange }
       lines.push("");
     }
     return lines.join("\n").trim();
-  }, [byCategory, entries]);
+  }, [byCategory, entries, resolvedDateLabel]);
 
   const handleCopy = async () => {
     try {
@@ -70,11 +81,11 @@ export function SummaryView({ products, entries, onClose, onClearAll, onChange }
   return (
     <div className="summary" role="dialog" aria-label="Wastage summary">
       <div className="summary__header">
-        <button type="button" className="summary__back" onClick={onClose} aria-label="Back to list">
+        <button type="button" className="summary__back" onClick={onClose} aria-label="Back">
           ←
         </button>
         <div>
-          <h2 className="summary__title">Summary sheet</h2>
+          <h2 className="summary__title">{readOnly ? resolvedDateLabel : "Summary sheet"}</h2>
           <p className="summary__subtitle">
             {totalItems} {totalItems === 1 ? "product" : "products"} logged
           </p>
@@ -83,8 +94,10 @@ export function SummaryView({ products, entries, onClose, onClearAll, onChange }
 
       {totalItems === 0 ? (
         <div className="summary__empty">
-          <p>Nothing logged yet.</p>
-          <p className="summary__empty-sub">Enter a quantity against any product to add it here.</p>
+          <p>Nothing logged{readOnly ? " that day." : " yet."}</p>
+          {!readOnly && (
+            <p className="summary__empty-sub">Enter a quantity against any product to add it here.</p>
+          )}
         </div>
       ) : (
         <>
@@ -98,14 +111,16 @@ export function SummaryView({ products, entries, onClose, onClearAll, onChange }
                     <span className="summary__row-qty">
                       {formatQty(entries[product.id], product.unit)}
                     </span>
-                    <button
-                      type="button"
-                      className="summary__row-remove"
-                      onClick={() => onChange(product.id, null)}
-                      aria-label={`Remove ${product.name}`}
-                    >
-                      ✕
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        className="summary__row-remove"
+                        onClick={() => onChange?.(product.id, null)}
+                        aria-label={`Remove ${product.name}`}
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -116,36 +131,33 @@ export function SummaryView({ products, entries, onClose, onClearAll, onChange }
             <button type="button" className="summary__copy" onClick={handleCopy}>
               {copied ? "Copied ✓" : "Copy for till"}
             </button>
-            {confirmingClear ? (
-              <div className="summary__confirm">
-                <span>Clear the whole sheet?</span>
-                <button
-                  type="button"
-                  className="summary__confirm-yes"
-                  onClick={() => {
-                    onClearAll();
-                    setConfirmingClear(false);
-                  }}
-                >
-                  Clear
+            {!readOnly &&
+              (confirmingClear ? (
+                <div className="summary__confirm">
+                  <span>Clear the whole sheet?</span>
+                  <button
+                    type="button"
+                    className="summary__confirm-yes"
+                    onClick={() => {
+                      onClearAll?.();
+                      setConfirmingClear(false);
+                    }}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    className="summary__confirm-no"
+                    onClick={() => setConfirmingClear(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button type="button" className="summary__clear" onClick={() => setConfirmingClear(true)}>
+                  Clear all
                 </button>
-                <button
-                  type="button"
-                  className="summary__confirm-no"
-                  onClick={() => setConfirmingClear(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="summary__clear"
-                onClick={() => setConfirmingClear(true)}
-              >
-                Clear all
-              </button>
-            )}
+              ))}
           </div>
         </>
       )}

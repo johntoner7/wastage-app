@@ -52,6 +52,22 @@
   color: var(--text-muted);
 }
 
+.header__history {
+  flex-shrink: 0;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.header__history:active {
+  background: var(--border);
+  color: var(--text);
+}
+
 .header__search {
   display: flex;
   align-items: center;
