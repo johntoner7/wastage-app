@@ -12,7 +12,7 @@ interface SyncStatusProps {
  * showing the banner immediately for every single tap made it flash
  * constantly. Only surface it once a sync has been outstanding long
  * enough to suggest a real connectivity problem. */
-const SHOW_DELAY_MS = 800;
+const SHOW_DELAY_MS = 3000;
 
 export function SyncStatus({ pendingCount, syncing, usingCache, onSync }: SyncStatusProps) {
   const shouldShow = pendingCount > 0 || usingCache;
