@@ -12,8 +12,9 @@ interface AddItemModalProps {
 const OTHER_CATEGORY = "Other";
 
 export function AddItemModal({ categories, initialName = "", onAdd, onClose }: AddItemModalProps) {
+  const sortedCategories = [...categories].sort((a, b) => a.localeCompare(b));
   const [name, setName] = useState(initialName);
-  const [category, setCategory] = useState(categories[0] ?? OTHER_CATEGORY);
+  const [category, setCategory] = useState(sortedCategories[0] ?? OTHER_CATEGORY);
   const [unit, setUnit] = useState<Unit>("kg");
 
   const trimmedName = name.trim();
@@ -48,7 +49,7 @@ export function AddItemModal({ categories, initialName = "", onAdd, onClose }: A
         <label className="add-item__field">
           <span>Category</span>
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
-            {categories.map((c) => (
+            {sortedCategories.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
