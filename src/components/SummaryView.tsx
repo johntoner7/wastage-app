@@ -36,7 +36,6 @@ export function SummaryView({
   onClearAll,
   onChange,
 }: SummaryViewProps) {
-  const [copied, setCopied] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const resolvedDateLabel = dateLabel ?? defaultDateLabel();
 
@@ -55,28 +54,6 @@ export function SummaryView({
   }, [products, entries]);
 
   const totalItems = byCategory.reduce((sum, g) => sum + g.items.length, 0);
-
-  const sheetText = useMemo(() => {
-    const lines = [`Wastage — ${resolvedDateLabel}`, ""];
-    for (const group of byCategory) {
-      lines.push(group.category.toUpperCase());
-      for (const product of group.items) {
-        lines.push(`  ${product.name} — ${formatQty(entries[product.id], product.unit)}`);
-      }
-      lines.push("");
-    }
-    return lines.join("\n").trim();
-  }, [byCategory, entries, resolvedDateLabel]);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(sheetText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      // Clipboard API can be unavailable — the text is still visible below to copy by hand.
-    }
-  };
 
   return (
     <div className="summary" role="dialog" aria-label="Wastage summary">
@@ -127,12 +104,9 @@ export function SummaryView({
             ))}
           </div>
 
-          <div className="summary__actions">
-            <button type="button" className="summary__copy" onClick={handleCopy}>
-              {copied ? "Copied ✓" : "Copy for till"}
-            </button>
-            {!readOnly &&
-              (confirmingClear ? (
+          {!readOnly && (
+            <div className="summary__actions">
+              {confirmingClear ? (
                 <div className="summary__confirm">
                   <span>Clear the whole sheet?</span>
                   <button
@@ -157,8 +131,9 @@ export function SummaryView({
                 <button type="button" className="summary__clear" onClick={() => setConfirmingClear(true)}>
                   Clear all
                 </button>
-              ))}
-          </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>
