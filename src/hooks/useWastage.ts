@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   deleteEntry,
   fetchEntriesForDate,
-  isSupabaseConfigured,
+  isApiConfigured,
   NetworkError,
   upsertEntry,
-} from "../lib/supabase";
+} from "../lib/api";
 import { loadCachedEntries, saveCachedEntries } from "../lib/localCache";
 import { loadQueue, queueKey, saveQueue, type QueuedWrite } from "../lib/pendingQueue";
 import type { WastageEntries } from "../types";
@@ -25,7 +25,7 @@ function applyWrite(entries: WastageEntries, write: QueuedWrite): WastageEntries
 }
 
 /**
- * Loads and syncs today's wastage entries against Supabase, so the same
+ * Loads and syncs today's wastage entries against the API, so the same
  * sheet is visible from any device — while staying usable when the
  * connection is bad or absent, which is common in backrooms and freezers.
  *
@@ -38,7 +38,7 @@ function applyWrite(entries: WastageEntries, write: QueuedWrite): WastageEntries
 export function useWastage() {
   const date = todayISO();
   const [entries, setEntries] = useState<WastageEntries>({});
-  const [status, setStatus] = useState<Status>(isSupabaseConfigured ? "loading" : "error");
+  const [status, setStatus] = useState<Status>(isApiConfigured ? "loading" : "error");
   const [error, setError] = useState<string | null>(null);
   const [usingCache, setUsingCache] = useState(false);
   const [pending, setPending] = useState<Record<string, QueuedWrite>>(() => loadQueue());
@@ -58,9 +58,9 @@ export function useWastage() {
   }, []);
 
   const load = useCallback(async () => {
-    if (!isSupabaseConfigured) {
+    if (!isApiConfigured) {
       setStatus("error");
-      setError("Supabase isn't configured yet — see README.md to connect a project.");
+      setError("API isn't configured yet — see README.md to connect one.");
       return;
     }
     setStatus("loading");

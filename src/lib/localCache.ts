@@ -2,7 +2,7 @@
  * A best-effort local copy of the last entries successfully fetched for a
  * date, so reopening the app while offline shows the last known state
  * instead of a blank sheet. This is a cache, not a source of truth —
- * Supabase always wins once it's reachable again.
+ * the API always wins once it's reachable again.
  */
 
 import type { WastageEntries } from "../types";

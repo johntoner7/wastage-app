@@ -1,7 +1,7 @@
 export type Unit = "kg" | "ea";
 
 export interface Product {
-  /** Stable identifier, also used as the Supabase row key. */
+  /** Stable identifier, also used as the API's row key. */
   id: string;
   name: string;
   category: string;

@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local development.
+# Any value works locally; the production value is set with
+# `wrangler secret put API_TOKEN` and lives only in Cloudflare.
+API_TOKEN=dev-local-token

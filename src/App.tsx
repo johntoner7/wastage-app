@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { CATEGORY_ORDER, PRODUCTS } from "./data/products";
 import { useWastage } from "./hooks/useWastage";
 import { useHistoryDay, useHistoryList } from "./hooks/useHistory";
-import { isSupabaseConfigured } from "./lib/supabase";
+import { isApiConfigured } from "./lib/api";
 import { Header } from "./components/Header";
 import { CategorySection } from "./components/CategorySection";
 import { SummaryBar } from "./components/SummaryBar";
@@ -62,7 +62,7 @@ export default function App() {
     });
   };
 
-  if (!isSupabaseConfigured) {
+  if (!isApiConfigured) {
     return (
       <div className="app">
         <Header query={query} onQueryChange={setQuery} onOpenHistory={() => setView("history")} />

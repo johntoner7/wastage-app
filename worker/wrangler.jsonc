@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wastage-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-22",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wastage-db",
+      "database_id": "3c653873-c600-457b-b04b-fe02827568d1",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 /**
- * A small durable queue for writes that couldn't reach Supabase yet.
+ * A small durable queue for writes that couldn't reach the API yet.
  * Backrooms and walk-in freezers are exactly where wifi tends to be worst,
  * so writes are applied to local state immediately and queued here to
  * retry, rather than blocking on the network or getting lost if the tab

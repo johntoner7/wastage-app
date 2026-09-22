@@ -1,4 +1,4 @@
-import type { HistoryDay } from "../lib/supabase";
+import type { HistoryDay } from "../lib/api";
 import "./HistoryView.css";
 
 interface HistoryViewProps {

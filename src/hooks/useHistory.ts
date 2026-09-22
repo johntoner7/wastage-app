@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchEntriesForDate, fetchHistorySummary, NetworkError, type HistoryDay } from "../lib/supabase";
+import { fetchEntriesForDate, fetchHistorySummary, NetworkError, type HistoryDay } from "../lib/api";
 import type { WastageEntries } from "../types";
 import { todayISO } from "./useWastage";
 

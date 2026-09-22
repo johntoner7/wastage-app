@@ -12,8 +12,10 @@ dist
 dist-ssr
 *.local
 
-# Supabase credentials — copy .env.example to .env and fill in your own
+# API credentials — copy .env.example to .env and fill in your own
 .env
+.dev.vars
+.wrangler
 
 # Editor directories and files
 .vscode/*
