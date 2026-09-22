@@ -1,0 +1,75 @@
+.qty {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.qty__step {
+  width: 30px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  font-size: 17px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.qty__step:active {
+  background: var(--border);
+  color: var(--text);
+}
+
+.qty__field {
+  position: relative;
+  width: 68px;
+}
+
+.qty__field input {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  text-align: center;
+  padding: 6px 22px 6px 6px;
+  outline: none;
+}
+
+.qty__field input:focus {
+  border-color: var(--green-strong);
+  box-shadow: 0 0 0 2px var(--green-wash);
+}
+
+.qty__field input::placeholder {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.qty__unit {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-faint);
+  pointer-events: none;
+  text-transform: lowercase;
+}
+
+.qty--active .qty__field input {
+  border-color: var(--green);
+  background: var(--green-wash);
+}
+
+.qty--active .qty__unit {
+  color: var(--green-strong);
+}

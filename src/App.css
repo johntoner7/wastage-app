@@ -1,0 +1,23 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app__list {
+  flex: 1;
+}
+
+.app__list-end {
+  height: 8px;
+}
+
+.app__no-results {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}

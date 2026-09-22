@@ -1,0 +1,45 @@
+.summarybar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 10px);
+  background: linear-gradient(180deg, transparent, var(--bg) 35%);
+}
+
+.summarybar__button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--green);
+  color: #0d1a10;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 13px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  touch-action: manipulation;
+}
+
+.summarybar__button:active {
+  background: var(--green-strong);
+}
+
+.summarybar__count {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: rgba(13, 26, 16, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.summarybar__arrow {
+  margin-left: auto;
+}

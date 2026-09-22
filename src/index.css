@@ -1,0 +1,81 @@
+:root {
+  color-scheme: dark;
+
+  /* Colour tokens */
+  --bg: #14170f;
+  --surface: #1d2119;
+  --surface-raised: #262b22;
+  --surface-input: #10130c;
+  --border: #333a2c;
+  --border-soft: #262b20;
+
+  --text: #f2f0e6;
+  --text-muted: #9ba394;
+  --text-faint: #656f5c;
+
+  --green: #3c8f52;
+  --green-strong: #4fac66;
+  --green-wash: rgba(60, 143, 82, 0.16);
+
+  --amber: #e3a73b;
+  --amber-wash: rgba(227, 167, 59, 0.14);
+
+  --danger: #c0533d;
+  --danger-wash: rgba(192, 83, 61, 0.14);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.4;
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+input {
+  font-family: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--green-wash);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
