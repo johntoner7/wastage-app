@@ -11,10 +11,6 @@
   flex: 1;
 }
 
-.app__list-end {
-  height: 8px;
-}
-
 .app__loading {
   padding: 48px 24px;
   text-align: center;
@@ -27,4 +23,32 @@
   text-align: center;
   color: var(--text-muted);
   font-size: 14px;
+}
+
+.app__add-item {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 100ms ease, color 100ms ease, border-color 100ms ease;
+}
+
+.app__no-results .app__add-item {
+  margin-top: 16px;
+}
+
+.app__add-item:active {
+  background: var(--green-wash);
+  color: var(--green-strong);
+  border-color: var(--green);
+}
+
+.app__add-item--footer {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 4px 16px 16px;
 }

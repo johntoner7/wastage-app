@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { CATEGORY_ORDER, PRODUCTS } from "./data/products";
 import { useWastage } from "./hooks/useWastage";
 import { useHistoryDay, useHistoryList } from "./hooks/useHistory";
+import { useCustomProducts } from "./hooks/useCustomProducts";
 import { isApiConfigured } from "./lib/api";
 import { Header } from "./components/Header";
 import { CategorySection } from "./components/CategorySection";
@@ -12,6 +13,7 @@ import { ConfigNotice } from "./components/ConfigNotice";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { SyncStatus } from "./components/SyncStatus";
 import { ListSkeleton } from "./components/Skeleton";
+import { AddItemModal } from "./components/AddItemModal";
 import "./App.css";
 
 type View = "list" | "summary" | "history" | "historyDay";
@@ -37,21 +39,29 @@ export default function App() {
   );
   const [view, setView] = useState<View>("list");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [addingItem, setAddingItem] = useState(false);
 
   const historyList = useHistoryList(view === "history");
   const historyDay = useHistoryDay(view === "historyDay" ? selectedDate : null);
+  const { customProducts, addCustomProduct } = useCustomProducts();
+
+  const allProducts = useMemo(() => [...PRODUCTS, ...customProducts], [customProducts]);
+  const categoryOrder = useMemo(
+    () => Array.from(new Set([...CATEGORY_ORDER, ...customProducts.map((p) => p.category)])),
+    [customProducts],
+  );
 
   const isSearching = query.trim().length > 0;
 
   const filteredByCategory = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return CATEGORY_ORDER.map((category) => ({
+    return categoryOrder.map((category) => ({
       category,
-      products: PRODUCTS.filter(
+      products: allProducts.filter(
         (p) => p.category === category && (q === "" || p.name.toLowerCase().includes(q)),
       ),
     })).filter((group) => group.products.length > 0);
-  }, [query]);
+  }, [query, allProducts, categoryOrder]);
 
   const toggleCategory = (category: string) => {
     setOpenCategories((prev) => {
@@ -139,7 +149,7 @@ export default function App() {
 
     return (
       <SummaryView
-        products={PRODUCTS}
+        products={allProducts}
         entries={historyDay.entries}
         dateLabel={dateLabel}
         readOnly
@@ -173,6 +183,9 @@ export default function App() {
           {filteredByCategory.length === 0 ? (
             <div className="app__no-results">
               <p>No products match "{query}".</p>
+              <button type="button" className="app__add-item" onClick={() => setAddingItem(true)}>
+                + Add "{query.trim()}" as a new item
+              </button>
             </div>
           ) : (
             filteredByCategory.map(({ category, products }) => (
@@ -188,7 +201,9 @@ export default function App() {
               />
             ))
           )}
-          <div className="app__list-end" />
+          <button type="button" className="app__add-item app__add-item--footer" onClick={() => setAddingItem(true)}>
+            + Item missing from this list?
+          </button>
         </main>
       )}
 
@@ -196,11 +211,25 @@ export default function App() {
 
       {view === "summary" && (
         <SummaryView
-          products={PRODUCTS}
+          products={allProducts}
           entries={entries}
           onClose={() => setView("list")}
           onClearAll={clearAll}
           onChange={setQuantity}
+        />
+      )}
+
+      {addingItem && (
+        <AddItemModal
+          categories={CATEGORY_ORDER}
+          initialName={isSearching ? query.trim() : ""}
+          onClose={() => setAddingItem(false)}
+          onAdd={(name, category, unit) => {
+            addCustomProduct(name, category, unit);
+            setOpenCategories((prev) => new Set(prev).add(category));
+            setAddingItem(false);
+            setQuery("");
+          }}
         />
       )}
     </div>

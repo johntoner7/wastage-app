@@ -1,0 +1,121 @@
+.add-item {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(10, 12, 7, 0.6);
+  animation: fade-in-down 120ms ease;
+}
+
+.add-item__sheet {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.add-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.add-item__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.add-item__close {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.add-item__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.add-item__field input,
+.add-item__field select {
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+  font-family: inherit;
+}
+
+.add-item__field input:focus,
+.add-item__field select:focus {
+  outline: 2px solid var(--green);
+  outline-offset: -1px;
+}
+
+.add-item__unit-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.add-item__unit-option {
+  flex: 1;
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: background-color 100ms ease, color 100ms ease, border-color 100ms ease;
+}
+
+.add-item__unit-option--active {
+  background: var(--green-wash);
+  border-color: var(--green);
+  color: var(--green-strong);
+}
+
+.add-item__submit {
+  background: var(--green);
+  color: #0d1a10;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  min-height: 48px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+  transition: background-color 100ms ease, transform 80ms ease, opacity 100ms ease;
+}
+
+.add-item__submit:active {
+  background: var(--green-strong);
+  transform: scale(0.99);
+}
+
+.add-item__submit:disabled {
+  opacity: 0.5;
+}
