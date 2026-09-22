@@ -6,6 +6,7 @@ interface CategorySectionProps {
   category: string;
   products: Product[];
   entries: WastageEntries;
+  pendingProductIds: Set<string>;
   isOpen: boolean;
   onToggle: () => void;
   onChange: (productId: string, value: number | null) => void;
@@ -15,6 +16,7 @@ export function CategorySection({
   category,
   products,
   entries,
+  pendingProductIds,
   isOpen,
   onToggle,
   onChange,
@@ -44,6 +46,7 @@ export function CategorySection({
               key={product.id}
               product={product}
               value={entries[product.id]}
+              pending={pendingProductIds.has(product.id)}
               onChange={(value) => onChange(product.id, value)}
             />
           ))}

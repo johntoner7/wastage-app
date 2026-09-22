@@ -5,6 +5,7 @@ import "./ProductRow.css";
 interface ProductRowProps {
   product: Product;
   value: number | undefined;
+  pending?: boolean;
   onChange: (value: number | null) => void;
 }
 
@@ -13,14 +14,21 @@ function initials(name: string): string {
   return words.slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
 
-export function ProductRow({ product, value, onChange }: ProductRowProps) {
+export function ProductRow({ product, value, pending = false, onChange }: ProductRowProps) {
   const isActive = value !== undefined && value > 0;
   return (
     <div className={`row${isActive ? " row--active" : ""}`}>
       <div className="row__badge" aria-hidden="true">
         {initials(product.name)}
       </div>
-      <div className="row__name">{product.name}</div>
+      <div className="row__name">
+        {product.name}
+        {pending && (
+          <span className="row__pending" title="Not yet synced">
+            •
+          </span>
+        )}
+      </div>
       <QuantityInput unit={product.unit} value={value} onChange={onChange} />
     </div>
   );

@@ -10,12 +10,26 @@ import { SummaryView } from "./components/SummaryView";
 import { HistoryView } from "./components/HistoryView";
 import { ConfigNotice } from "./components/ConfigNotice";
 import { ErrorBanner } from "./components/ErrorBanner";
+import { SyncStatus } from "./components/SyncStatus";
 import "./App.css";
 
 type View = "list" | "summary" | "history" | "historyDay";
 
 export default function App() {
-  const { entries, setQuantity, clearAll, recordedCount, status, error, reload } = useWastage();
+  const {
+    entries,
+    setQuantity,
+    clearAll,
+    recordedCount,
+    status,
+    error,
+    reload,
+    pendingCount,
+    pendingProductIds,
+    syncing,
+    usingCache,
+    flushQueue,
+  } = useWastage();
   const [query, setQuery] = useState("");
   const [openCategories, setOpenCategories] = useState<Set<string>>(
     () => new Set([CATEGORY_ORDER[0]]),
@@ -103,7 +117,19 @@ export default function App() {
     <div className="app">
       <Header query={query} onQueryChange={setQuery} onOpenHistory={() => setView("history")} />
 
+      {/* A real, non-network problem (bad config, RLS, etc.) — needs attention. */}
       {error && <ErrorBanner message={error} onRetry={reload} />}
+
+      {/* Offline / queued writes — expected in a backroom or freezer, not an error. */}
+      <SyncStatus
+        pendingCount={pendingCount}
+        syncing={syncing}
+        usingCache={usingCache}
+        onSync={() => {
+          reload();
+          flushQueue();
+        }}
+      />
 
       {status === "loading" && recordedCount === 0 ? (
         <div className="app__loading">Loading today's sheet…</div>
@@ -120,6 +146,7 @@ export default function App() {
                 category={category}
                 products={products}
                 entries={entries}
+                pendingProductIds={pendingProductIds}
                 isOpen={isSearching || openCategories.has(category)}
                 onToggle={() => toggleCategory(category)}
                 onChange={setQuantity}

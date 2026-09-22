@@ -22,6 +22,12 @@ log wastage from your phone in the morning, check it from a tablet later.
   copy-for-till).
 - Every change saves straight to Supabase as you go, so switching devices
   mid-shift just works — there's nothing to sync manually.
+- **Works offline.** Backrooms and walk-in freezers are exactly where wifi
+  tends to be worst — if a save can't reach Supabase, it's queued and kept
+  locally, the row shows a small amber dot to say it hasn't synced yet, and
+  a pill at the top shows how many changes are waiting. Queued changes
+  retry automatically as soon as the connection's back (or tap "Sync now"),
+  and nothing is lost even if the tab closes before that happens.
 
 ## Setting up Supabase
 
@@ -55,6 +61,26 @@ policies to authenticated requests instead of `true`.
 
 If you skip this setup, the app still runs and shows a "Not connected yet"
 screen explaining what's missing, rather than crashing.
+
+## How the offline queue works
+
+Every write (entering a quantity, clearing a row, clearing the whole sheet)
+applies to the screen immediately and is saved to a small queue in
+`localStorage` before anything is sent over the network. That queue is
+flushed to Supabase right away if possible, again whenever the browser
+reports it's back online, and every 15 seconds as a fallback for
+connections that don't fire that event reliably (common on patchy wifi).
+A write is only removed from the queue once Supabase has confirmed it —
+so closing the tab, losing signal mid-save, or a dead connection at the
+start of a shift can't silently drop an entry.
+
+The distinction that matters here is *offline* vs. *broken*: a network
+failure (no connection, DNS, timeout) queues quietly and shows the amber
+"N changes waiting to sync" pill — normal, expected, no action needed. A
+request that reaches Supabase and gets rejected (bad table name, a policy
+denying access, etc.) surfaces as a red error banner instead, because
+retrying on its own won't fix that — something in the setup needs
+attention.
 
 ## Running it
 

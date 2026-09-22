@@ -23,6 +23,20 @@ const baseHeaders = {
   "Content-Type": "application/json",
 };
 
+/** Thrown when the request never reached the server — offline, DNS failure,
+ * timeout, etc. Callers treat this as "try again later", not a real error. */
+export class NetworkError extends Error {}
+
+/** Thrown when the server responded but rejected the request (bad config,
+ * RLS denial, validation failure). Retrying won't help without a fix. */
+export class SupabaseRequestError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 interface EntryRow {
   entry_date: string;
   product_id: string;
@@ -33,13 +47,20 @@ async function request(path: string, init?: RequestInit) {
   if (!isSupabaseConfigured) {
     throw new Error("Supabase isn't configured — set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
   }
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: { ...baseHeaders, ...(init?.headers ?? {}) },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...init,
+      headers: { ...baseHeaders, ...(init?.headers ?? {}) },
+    });
+  } catch (e) {
+    // fetch() itself throws (TypeError) when the request never left the
+    // browser — no connection, DNS failure, CORS block, etc.
+    throw new NetworkError(e instanceof Error ? e.message : "Network request failed");
+  }
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`Supabase request failed (${res.status}): ${body || res.statusText}`);
+    throw new SupabaseRequestError(body || res.statusText, res.status);
   }
   // 204 No Content (e.g. DELETE) has no body to parse.
   if (res.status === 204) return null;

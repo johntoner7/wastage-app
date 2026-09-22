@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  deleteAllEntriesForDate,
   deleteEntry,
   fetchEntriesForDate,
   isSupabaseConfigured,
+  NetworkError,
   upsertEntry,
 } from "../lib/supabase";
+import { loadCachedEntries, saveCachedEntries } from "../lib/localCache";
+import { loadQueue, queueKey, saveQueue, type QueuedWrite } from "../lib/pendingQueue";
 import type { WastageEntries } from "../types";
 
 export function todayISO(): string {
@@ -15,18 +17,45 @@ export function todayISO(): string {
 
 type Status = "loading" | "ready" | "error";
 
+function applyWrite(entries: WastageEntries, write: QueuedWrite): WastageEntries {
+  const next = { ...entries };
+  if (write.quantity === null) delete next[write.productId];
+  else next[write.productId] = write.quantity;
+  return next;
+}
+
 /**
  * Loads and syncs today's wastage entries against Supabase, so the same
- * sheet is visible from any device. Writes are applied to local state
- * immediately (so the UI feels instant) and pushed to Supabase in the
- * background; if a write fails, we surface an error and re-fetch from
- * the server so local state can't silently drift from what's saved.
+ * sheet is visible from any device — while staying usable when the
+ * connection is bad or absent, which is common in backrooms and freezers.
+ *
+ * Writes apply to local state immediately and are queued to
+ * localStorage; a queued write is only dropped once it's confirmed saved.
+ * The queue is flushed on every write, whenever the browser reports it's
+ * back online, and on a short interval as a fallback for connections that
+ * don't fire that event reliably.
  */
 export function useWastage() {
   const date = todayISO();
   const [entries, setEntries] = useState<WastageEntries>({});
   const [status, setStatus] = useState<Status>(isSupabaseConfigured ? "loading" : "error");
   const [error, setError] = useState<string | null>(null);
+  const [usingCache, setUsingCache] = useState(false);
+  const [pending, setPending] = useState<Record<string, QueuedWrite>>(() => loadQueue());
+  const [syncing, setSyncing] = useState(false);
+
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
+  const flushingRef = useRef(false);
+
+  const updatePending = useCallback((updater: (prev: Record<string, QueuedWrite>) => Record<string, QueuedWrite>) => {
+    setPending((prev) => {
+      const next = updater(prev);
+      saveQueue(next);
+      pendingRef.current = next;
+      return next;
+    });
+  }, []);
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -37,57 +66,147 @@ export function useWastage() {
     setStatus("loading");
     try {
       const fetched = await fetchEntriesForDate(date);
-      setEntries(fetched);
+      let merged = fetched;
+      for (const write of Object.values(pendingRef.current)) {
+        if (write.date === date) merged = applyWrite(merged, write);
+      }
+      setEntries(merged);
+      saveCachedEntries(date, merged);
+      setUsingCache(false);
       setStatus("ready");
       setError(null);
     } catch (e) {
-      setStatus("error");
-      setError(e instanceof Error ? e.message : "Couldn't load today's sheet.");
+      // Can't reach the server (or it rejected us) — fall back to the last
+      // cached copy, overlaid with anything still queued, so the sheet
+      // isn't just blank while offline.
+      const cached = loadCachedEntries(date) ?? {};
+      let merged = cached;
+      for (const write of Object.values(pendingRef.current)) {
+        if (write.date === date) merged = applyWrite(merged, write);
+      }
+      setEntries(merged);
+      setUsingCache(true);
+      setStatus("ready");
+      if (!(e instanceof NetworkError)) {
+        setError(e instanceof Error ? e.message : "Couldn't load today's sheet.");
+      } else {
+        setError(null);
+      }
     }
   }, [date]);
 
   useEffect(() => {
     load();
-  }, [load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
+
+  const flushQueue = useCallback(async () => {
+    if (flushingRef.current) return;
+    flushingRef.current = true;
+    setSyncing(true);
+    try {
+      const keys = Object.keys(pendingRef.current);
+      for (const key of keys) {
+        const write = pendingRef.current[key];
+        if (!write) continue;
+        try {
+          if (write.quantity === null) {
+            await deleteEntry(write.date, write.productId);
+          } else {
+            await upsertEntry(write.date, write.productId, write.quantity);
+          }
+          // Only clear this key if it hasn't been superseded by a newer
+          // edit made while the request was in flight.
+          updatePending((prev) => {
+            if (prev[key]?.queuedAt !== write.queuedAt) return prev;
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          });
+          setError(null);
+        } catch (e) {
+          if (e instanceof NetworkError) {
+            // Still offline — stop this pass, the interval/online listener
+            // will try again shortly. Leave everything else queued.
+            break;
+          }
+          // A real rejection (bad config, RLS, etc.) — surface it, but
+          // leave the write queued rather than silently dropping data.
+          setError(e instanceof Error ? e.message : "Couldn't save a queued change.");
+        }
+      }
+    } finally {
+      flushingRef.current = false;
+      setSyncing(false);
+    }
+  }, [updatePending]);
+
+  // Retry whenever the browser regains connectivity, and periodically as a
+  // fallback for flaky connections that don't fire the 'online' event.
+  useEffect(() => {
+    const onOnline = () => flushQueue();
+    window.addEventListener("online", onOnline);
+    const interval = setInterval(() => {
+      if (Object.keys(pendingRef.current).length > 0) flushQueue();
+    }, 15000);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      clearInterval(interval);
+    };
+  }, [flushQueue]);
 
   const setQuantity = useCallback(
     (productId: string, quantity: number | null) => {
+      const normalized = quantity !== null && quantity > 0 && !Number.isNaN(quantity) ? quantity : null;
+
       setEntries((prev) => {
         const next = { ...prev };
-        if (quantity === null || Number.isNaN(quantity) || quantity <= 0) delete next[productId];
-        else next[productId] = quantity;
+        if (normalized === null) delete next[productId];
+        else next[productId] = normalized;
+        saveCachedEntries(date, next);
         return next;
       });
 
-      (async () => {
-        try {
-          if (quantity === null || Number.isNaN(quantity) || quantity <= 0) {
-            await deleteEntry(date, productId);
-          } else {
-            await upsertEntry(date, productId, quantity);
-          }
-          setError(null);
-        } catch (e) {
-          setError(e instanceof Error ? e.message : "Couldn't save that change — check your connection.");
-          load();
-        }
-      })();
+      const write: QueuedWrite = { date, productId, quantity: normalized, queuedAt: Date.now() };
+      updatePending((prev) => ({ ...prev, [queueKey(date, productId)]: write }));
+      flushQueue();
     },
-    [date, load],
+    [date, flushQueue, updatePending],
   );
 
-  const clearAll = useCallback(async () => {
+  const clearAll = useCallback(() => {
+    const idsToClear = Object.keys(entries);
     setEntries({});
-    try {
-      await deleteAllEntriesForDate(date);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't clear the sheet — check your connection.");
-      load();
-    }
-  }, [date, load]);
+    saveCachedEntries(date, {});
+    updatePending((prev) => {
+      const next = { ...prev };
+      for (const productId of idsToClear) {
+        next[queueKey(date, productId)] = { date, productId, quantity: null, queuedAt: Date.now() };
+      }
+      return next;
+    });
+    flushQueue();
+  }, [date, entries, flushQueue, updatePending]);
 
-  const recordedCount = Object.keys(entries).length;
+  const pendingCount = Object.values(pending).filter((w) => w.date === date).length;
 
-  return { entries, setQuantity, clearAll, recordedCount, status, error, reload: load, date };
+  return {
+    entries,
+    setQuantity,
+    clearAll,
+    recordedCount: Object.keys(entries).length,
+    status,
+    error,
+    reload: load,
+    date,
+    pendingCount,
+    pendingProductIds: new Set(
+      Object.values(pending)
+        .filter((w) => w.date === date)
+        .map((w) => w.productId),
+    ),
+    syncing,
+    usingCache,
+    flushQueue,
+  };
 }
