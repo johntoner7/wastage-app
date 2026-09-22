@@ -1,0 +1,59 @@
+.skeleton {
+  padding-top: 2px;
+}
+
+.skeleton__category {
+  border-bottom: 6px solid var(--bg);
+}
+
+.skeleton__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.skeleton__badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--surface-raised);
+  flex-shrink: 0;
+  animation: pulse-soft 1.4s ease-in-out infinite;
+}
+
+.skeleton__bar {
+  background: var(--surface-raised);
+  border-radius: 6px;
+  animation: pulse-soft 1.4s ease-in-out infinite;
+}
+
+.skeleton__bar--title {
+  height: 44px;
+  border-radius: 0;
+  margin: 0;
+}
+
+.skeleton__bar--name {
+  flex: 1;
+  height: 14px;
+  max-width: 140px;
+}
+
+.skeleton__bar--qty {
+  width: 152px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.skeleton__row:nth-child(2) .skeleton__badge,
+.skeleton__row:nth-child(2) .skeleton__bar {
+  animation-delay: 80ms;
+}
+
+.skeleton__row:nth-child(3) .skeleton__badge,
+.skeleton__row:nth-child(3) .skeleton__bar {
+  animation-delay: 160ms;
+}

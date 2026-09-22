@@ -22,12 +22,13 @@ export function CategorySection({
   onChange,
 }: CategorySectionProps) {
   const recordedInCategory = products.filter((p) => entries[p.id] > 0).length;
+  const hasActivity = recordedInCategory > 0;
 
   return (
     <section className="category">
       <button
         type="button"
-        className="category__header"
+        className={`category__header${hasActivity ? " category__header--active" : ""}`}
         onClick={onToggle}
         aria-expanded={isOpen}
       >
@@ -35,12 +36,12 @@ export function CategorySection({
           ▸
         </span>
         <span className="category__title">{category}</span>
-        <span className="category__count">
-          {recordedInCategory > 0 ? `${recordedInCategory} logged` : `${products.length}`}
+        <span className={`category__count${hasActivity ? " category__count--active" : ""}`}>
+          {hasActivity ? `${recordedInCategory} logged` : `${products.length}`}
         </span>
       </button>
-      {isOpen && (
-        <div className="category__body">
+      <div className={`category__collapse${isOpen ? " category__collapse--open" : ""}`}>
+        <div className="category__body" aria-hidden={!isOpen}>
           {products.map((product) => (
             <ProductRow
               key={product.id}
@@ -51,7 +52,7 @@ export function CategorySection({
             />
           ))}
         </div>
-      )}
+      </div>
     </section>
   );
 }

@@ -7,18 +7,28 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   background: var(--surface-raised);
   border: none;
-  cursor: pointer;
+  border-left: 3px solid transparent;
   text-align: left;
+  transition: border-color 150ms ease;
+}
+
+.category__header--active {
+  border-left-color: var(--green);
+}
+
+.category__header:active {
+  background: var(--border-soft);
 }
 
 .category__chevron {
   color: var(--text-faint);
   font-size: 12px;
-  transition: transform 150ms ease;
+  transition: transform 180ms ease;
   transform: rotate(0deg);
+  flex-shrink: 0;
 }
 
 .category__chevron--open {
@@ -40,9 +50,30 @@
   background: var(--surface-input);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 3px 9px;
+  flex-shrink: 0;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.category__count--active {
+  color: var(--green-strong);
+  border-color: var(--green);
+}
+
+/* Animated expand/collapse without measuring content height in JS: a grid
+   row that tweens between 0fr and 1fr, clipped by overflow:hidden. */
+.category__collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms ease;
+}
+
+.category__collapse--open {
+  grid-template-rows: 1fr;
 }
 
 .category__body {
+  overflow: hidden;
   background: var(--surface);
+  min-height: 0;
 }

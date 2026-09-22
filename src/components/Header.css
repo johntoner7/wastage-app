@@ -11,6 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   margin-bottom: 12px;
 }
 
@@ -18,6 +19,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .header__mark {
@@ -38,18 +40,26 @@
   clip-path: polygon(0 100%, 35% 40%, 60% 65%, 100% 0, 100% 100%);
 }
 
+.header__brand-text {
+  min-width: 0;
+}
+
 .header__title {
   margin: 0;
   font-family: var(--font-display);
   font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .header__subtitle {
   margin: 1px 0 0;
   font-size: 12px;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header__history {
@@ -58,14 +68,17 @@
   border: 1px solid var(--border);
   color: var(--text-muted);
   border-radius: var(--radius-sm);
-  padding: 7px 12px;
-  font-size: 12px;
+  padding: 9px 13px;
+  min-height: 36px;
+  font-size: 12.5px;
   font-weight: 600;
+  transition: background-color 100ms ease, color 100ms ease, transform 80ms ease;
 }
 
 .header__history:active {
   background: var(--border);
   color: var(--text);
+  transform: scale(0.96);
 }
 
 .header__search {
@@ -75,7 +88,13 @@
   background: var(--surface-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 9px 12px;
+  padding: 11px 12px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.header__search:focus-within {
+  border-color: var(--green-strong);
+  box-shadow: 0 0 0 3px var(--green-wash);
 }
 
 .header__search-icon {
@@ -88,7 +107,8 @@
   background: none;
   border: none;
   outline: none;
-  font-size: 14px;
+  /* 16px minimum keeps iOS Safari from zooming the page on focus. */
+  font-size: 16px;
   color: var(--text);
   min-width: 0;
 }
@@ -101,6 +121,28 @@
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 12px;
-  padding: 2px 4px;
+  font-size: 13px;
+  width: 28px;
+  height: 28px;
+  margin: -4px -2px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header__clear:active {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+@media (max-width: 360px) {
+  .header__title {
+    font-size: 17px;
+  }
+  .header__history {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
 }

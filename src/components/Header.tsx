@@ -18,7 +18,7 @@ export function Header({ query, onQueryChange, onOpenHistory }: HeaderProps) {
       <div className="header__top">
         <div className="header__brand">
           <span className="header__mark" aria-hidden="true" />
-          <div>
+          <div className="header__brand-text">
             <h1 className="header__title">Wastage</h1>
             <p className="header__subtitle">Line check · {dateLabel}</p>
           </div>

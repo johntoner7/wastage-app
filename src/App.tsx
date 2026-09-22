@@ -11,6 +11,7 @@ import { HistoryView } from "./components/HistoryView";
 import { ConfigNotice } from "./components/ConfigNotice";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { SyncStatus } from "./components/SyncStatus";
+import { ListSkeleton } from "./components/Skeleton";
 import "./App.css";
 
 type View = "list" | "summary" | "history" | "historyDay";
@@ -87,13 +88,6 @@ export default function App() {
   }
 
   if (view === "historyDay" && selectedDate) {
-    if (historyDay.status === "loading") {
-      return (
-        <div className="app">
-          <div className="app__loading">Loading…</div>
-        </div>
-      );
-    }
     const dateLabel = (() => {
       const [y, m, d] = selectedDate.split("-").map(Number);
       return new Date(y, m - 1, d).toLocaleDateString(undefined, {
@@ -102,6 +96,47 @@ export default function App() {
         month: "long",
       });
     })();
+
+    if (historyDay.status === "loading") {
+      return (
+        <div className="history">
+          <div className="history__header">
+            <button type="button" className="history__back" onClick={() => setView("history")} aria-label="Back">
+              ←
+            </button>
+            <div>
+              <h2 className="history__title">{dateLabel}</h2>
+            </div>
+          </div>
+          <div className="history__state">
+            <span className="history__spinner" />
+            Loading…
+          </div>
+        </div>
+      );
+    }
+
+    if (historyDay.status === "error") {
+      return (
+        <div className="history">
+          <div className="history__header">
+            <button type="button" className="history__back" onClick={() => setView("history")} aria-label="Back">
+              ←
+            </button>
+            <div>
+              <h2 className="history__title">{dateLabel}</h2>
+            </div>
+          </div>
+          <div className="history__state history__state--error">
+            <p>{historyDay.error ?? "Couldn't load that day."}</p>
+            <button type="button" className="history__retry" onClick={historyDay.reload}>
+              Try again
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <SummaryView
         products={PRODUCTS}
@@ -132,7 +167,7 @@ export default function App() {
       />
 
       {status === "loading" && recordedCount === 0 ? (
-        <div className="app__loading">Loading today's sheet…</div>
+        <ListSkeleton />
       ) : (
         <main className="app__list">
           {filteredByCategory.length === 0 ? (

@@ -34,7 +34,12 @@ export function HistoryView({ days, status, error, onClose, onSelect, onRetry }:
         </div>
       </div>
 
-      {status === "loading" && <div className="history__state">Loading…</div>}
+      {status === "loading" && (
+        <div className="history__state">
+          <span className="history__spinner" />
+          Loading…
+        </div>
+      )}
 
       {status === "error" && (
         <div className="history__state history__state--error">

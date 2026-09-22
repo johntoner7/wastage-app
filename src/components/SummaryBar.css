@@ -4,6 +4,7 @@
   z-index: 20;
   padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 10px);
   background: linear-gradient(180deg, transparent, var(--bg) 35%);
+  animation: fade-in-down 200ms ease;
 }
 
 .summarybar__button {
@@ -15,15 +16,17 @@
   color: #0d1a10;
   border: none;
   border-radius: var(--radius-md);
-  padding: 13px 16px;
+  padding: 14px 16px;
+  min-height: 48px;
   font-size: 14px;
   font-weight: 600;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-  touch-action: manipulation;
+  transition: background-color 100ms ease, transform 80ms ease;
 }
 
 .summarybar__button:active {
   background: var(--green-strong);
+  transform: scale(0.985);
 }
 
 .summarybar__count {

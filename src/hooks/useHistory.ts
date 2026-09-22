@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchEntriesForDate, fetchHistorySummary, type HistoryDay } from "../lib/supabase";
+import { fetchEntriesForDate, fetchHistorySummary, NetworkError, type HistoryDay } from "../lib/supabase";
 import type { WastageEntries } from "../types";
 import { todayISO } from "./useWastage";
 
 type Status = "loading" | "ready" | "error";
+
+function friendlyMessage(e: unknown, fallback: string): string {
+  if (e instanceof NetworkError) {
+    return "Can't reach the server — check your connection and try again.";
+  }
+  return e instanceof Error ? e.message : fallback;
+}
 
 /** List of past dates that have logged entries, most recent first. */
 export function useHistoryList(enabled: boolean) {
@@ -20,7 +27,7 @@ export function useHistoryList(enabled: boolean) {
       setError(null);
     } catch (e) {
       setStatus("error");
-      setError(e instanceof Error ? e.message : "Couldn't load history.");
+      setError(friendlyMessage(e, "Couldn't load history."));
     }
   }, []);
 
@@ -37,8 +44,8 @@ export function useHistoryDay(date: string | null) {
   const [status, setStatus] = useState<Status>("loading");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!date) return;
+  const load = useCallback(() => {
+    if (!date) return () => {};
     let cancelled = false;
     setStatus("loading");
     fetchEntriesForDate(date)
@@ -51,12 +58,14 @@ export function useHistoryDay(date: string | null) {
       .catch((e) => {
         if (cancelled) return;
         setStatus("error");
-        setError(e instanceof Error ? e.message : "Couldn't load that day.");
+        setError(friendlyMessage(e, "Couldn't load that day."));
       });
     return () => {
       cancelled = true;
     };
   }, [date]);
 
-  return { entries, status, error };
+  useEffect(() => load(), [load]);
+
+  return { entries, status, error, reload: load };
 }

@@ -62,15 +62,47 @@ body {
 button {
   font-family: inherit;
   color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 input {
   font-family: inherit;
   color: inherit;
+  /* iOS Safari zooms the page in when a focused input's font is under
+     16px — every input in this app is set to at least 16px because of it. */
+}
+
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--green-strong);
+  outline-offset: 2px;
 }
 
 ::selection {
   background: var(--green-wash);
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

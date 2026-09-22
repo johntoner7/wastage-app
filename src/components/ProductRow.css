@@ -2,10 +2,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-soft);
   border-left: 3px solid transparent;
-  transition: background-color 120ms ease, border-color 120ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
 .row--active {
@@ -14,8 +14,9 @@
 }
 
 .row__badge {
-  width: 32px;
-  height: 32px;
+  position: relative;
+  width: 34px;
+  height: 34px;
   border-radius: 9px;
   background: var(--surface-raised);
   border: 1px solid var(--border);
@@ -27,11 +28,38 @@
   font-weight: 600;
   color: var(--text-muted);
   flex-shrink: 0;
+  transition: border-color 150ms ease, color 150ms ease;
 }
 
 .row--active .row__badge {
   border-color: var(--green);
   color: var(--green-strong);
+}
+
+.row__badge-check {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: badge-pop 180ms ease;
+}
+
+@keyframes badge-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .row__name {
@@ -49,4 +77,10 @@
   margin-left: 5px;
   font-size: 16px;
   line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row__badge-check {
+    animation: none;
+  }
 }
